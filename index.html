@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Mon Carnet de Courses</title>
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#C98A2E" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Courses" />
+<link rel="apple-touch-icon" href="apple-touch-icon.png" />
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#1C2620;
+    --panel:#223129;
+    --paper:#F6EFDE;
+    --paper2:#FCF8EE;
+    --ink:#2A2118;
+    --ink-soft:#6b6047;
+    --ink-faint:#8a7d63;
+    --fruits:#C1443A;      --fruits-dark:#8f2f28;
+    --legumes:#4C8C4A;     --legumes-dark:#356233;
+    --epicerie:#C98A2E;    --epicerie-dark:#966a1f;
+  }
+  *{box-sizing:border-box; font-family:'Inter',sans-serif;}
+  .mono{font-family:'Space Mono',monospace;}
+  .stamp-font{font-family:'Bebas Neue',sans-serif;}
+  body{
+    margin:0;
+    min-height:100vh;
+    background-color:var(--bg);
+    background-image:
+      radial-gradient(circle at 20% 10%, rgba(255,255,255,0.04), transparent 40%),
+      radial-gradient(circle at 85% 85%, rgba(255,255,255,0.03), transparent 45%);
+    padding:32px 16px 60px;
+  }
+  .wrap{max-width:1120px; margin:0 auto;}
+
+  header.app{
+    display:flex; align-items:center; justify-content:space-between; gap:16px;
+    margin-bottom:32px; flex-wrap:wrap;
+  }
+  .app-title{display:flex; align-items:center; gap:16px;}
+  .stamp{position:relative; width:84px; height:84px; flex-shrink:0;}
+  .stamp-inner{
+    position:absolute; inset:0; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    transform:rotate(-6deg);
+    background:radial-gradient(circle at 35% 30%, #E9B84F, #C98A2E 65%, #8f6216 100%);
+    border:2px solid #7a5314;
+    box-shadow:
+      0 2px 0 #7a5314, 0 4px 0 #7a5314, 0 6px 0 #6b4811,
+      0 8px 10px rgba(0,0,0,0.45),
+      inset 0 2px 3px rgba(255,255,255,0.35),
+      inset 0 -3px 4px rgba(0,0,0,0.25);
+  }
+  .stamp-inner span{
+    font-size:30px; letter-spacing:2px; color:#3a2408;
+    text-shadow:0 1px 0 rgba(255,255,255,0.3), 0 -1px 1px rgba(0,0,0,0.3);
+  }
+  h1.title{margin:0; font-size:42px; line-height:1; letter-spacing:1px; color:var(--paper);}
+  header.app p{margin:6px 0 0; font-size:14px; color:#9fae9f;}
+
+  .currency-picker{display:flex; flex-direction:column; gap:4px; align-items:flex-end;}
+  .currency-picker label{font-size:11px; text-transform:uppercase; letter-spacing:0.5px; color:#9fae9f;}
+  .currency-picker select{
+    background:var(--paper2); color:var(--ink); border:2px solid var(--epicerie);
+    border-radius:8px; padding:8px 12px; font-size:14px; font-weight:600; cursor:pointer;
+  }
+
+  .grid{display:grid; grid-template-columns:1fr; gap:20px;}
+  @media(min-width:860px){ .grid{grid-template-columns:repeat(3,1fr);} }
+
+  .col{
+    background:var(--paper); border-radius:14px; padding:16px;
+    box-shadow:6px 6px 0 rgba(0,0,0,0.35);
+  }
+  .col-head{display:flex; align-items:center; gap:10px; margin-bottom:12px;}
+  .icon-circle{
+    width:36px; height:36px; border-radius:50%; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    color:#fff; font-size:18px;
+  }
+  .col-head h2{margin:0; font-size:26px; letter-spacing:1px; color:var(--ink);}
+
+  form.add-form{display:flex; flex-direction:column; gap:8px;}
+  form.add-form input{
+    width:100%; padding:9px 12px; border-radius:8px; border:2px solid;
+    background:var(--paper2); color:var(--ink); font-size:14px; outline:none;
+  }
+  form.add-form input::placeholder{color:var(--ink-faint);}
+  .row-2{display:flex; gap:8px;}
+  .row-2 input{width:50%;}
+  .row-2 .qty-unit-wrap{width:50%; display:flex; gap:6px;}
+  .row-2 .qty-unit-wrap input{width:auto; flex:1; min-width:0;}
+  .row-2 .qty-unit-wrap select{
+    flex-shrink:0; padding:9px 6px; border-radius:8px; border:2px solid;
+    background:var(--paper2); color:var(--ink); font-size:13px; outline:none;
+  }
+  .row-2 .qty-unit-wrap .unit-fixed{
+    flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    padding:0 10px; border-radius:8px; border:2px solid;
+    background:var(--paper2); color:var(--ink-soft); font-size:13px; font-weight:600;
+  }
+  form.add-form button{
+    display:flex; align-items:center; justify-content:center; gap:6px;
+    border:none; border-radius:8px; padding:10px; margin-top:2px;
+    font-weight:700; text-transform:uppercase; letter-spacing:0.5px; font-size:13px;
+    color:var(--paper2); cursor:pointer;
+  }
+  form.add-form button:active{transform:scale(0.97);}
+
+  .items{margin-top:14px; display:flex; flex-direction:column; gap:6px; min-height:20px;}
+  .empty-note{text-align:center; font-size:12px; font-style:italic; color:var(--ink-faint); padding-top:8px;}
+  .item-row{
+    display:flex; align-items:center; justify-content:space-between;
+    background:rgba(255,255,255,0.55); border-radius:8px; padding:6px 10px; font-size:14px;
+  }
+  .item-name{font-weight:600; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .item-sub{font-size:11px; color:var(--ink-soft);}
+  .item-right{display:flex; align-items:center; gap:8px; padding-left:8px;}
+  .item-amount{font-weight:700; font-size:14px;}
+  .del-btn{
+    background:none; border:none; cursor:pointer; color:#a89a7a; padding:2px;
+    display:flex; align-items:center;
+  }
+  .del-btn:hover{color:var(--fruits);}
+
+  .col-total{
+    margin-top:12px; display:flex; align-items:center; justify-content:space-between;
+    border-top:2px dashed; padding-top:8px;
+  }
+  .col-total .label{font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:var(--ink-soft);}
+  .col-total .value{font-size:19px; font-weight:800;}
+
+  section.register{
+    margin-top:32px; border-radius:14px; overflow:hidden;
+    background:var(--paper); border:2px solid rgba(201,138,46,0.4);
+    box-shadow:6px 6px 0 rgba(0,0,0,0.35);
+  }
+  .register-head{
+    display:flex; align-items:center; justify-content:space-between;
+    background:var(--panel); padding:12px 20px;
+  }
+  .register-head h2{margin:0; font-size:26px; letter-spacing:1px; color:var(--paper);}
+  .register-head span{font-size:12px; color:#9fae9f;}
+
+  .table-scroll{overflow-x:auto;}
+  table{width:100%; min-width:760px; border-collapse:collapse; font-size:14px;}
+  thead tr{border-bottom:2px dashed var(--epicerie);}
+  thead th{
+    text-align:left; padding:10px 16px; font-size:11px; text-transform:uppercase;
+    letter-spacing:0.5px; color:var(--ink-soft); font-weight:700;
+  }
+  thead th.num{text-align:right;}
+  tbody td{padding:8px 16px; color:var(--ink);}
+  tbody tr:nth-child(even){background:rgba(255,255,255,0.4);}
+  td.num{text-align:right;}
+  .badge{
+    color:#fff; font-size:11px; font-weight:700; padding:2px 9px; border-radius:999px;
+  }
+  tfoot td{padding:12px 16px; border-top:2px solid var(--epicerie); background:rgba(34,49,41,0.05);}
+  tfoot .tot-label{text-align:right; font-size:11px; font-weight:700; text-transform:uppercase; color:var(--ink-soft);}
+  tfoot .tot-value{text-align:right; font-size:17px; font-weight:800; color:var(--ink);}
+
+  .install-banner{
+    display:none; align-items:center; justify-content:space-between; gap:12px;
+    background:var(--epicerie); color:#3a2408; border-radius:10px; padding:10px 16px;
+    margin-bottom:20px; font-size:14px; font-weight:600;
+  }
+  .install-banner button{
+    background:#3a2408; color:var(--paper2); border:none; border-radius:6px;
+    padding:8px 14px; font-weight:700; cursor:pointer; font-size:13px;
+  }
+
+  footer.app{text-align:center; font-size:12px; color:#6f8070; margin-top:22px;}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="install-banner" id="installBanner">
+    <span>Installe cette appli sur ton téléphone pour l'utiliser hors-ligne.</span>
+    <button id="installBtn">Installer</button>
+  </div>
+
+  <header class="app">
+    <div class="app-title">
+      <div class="stamp"><div class="stamp-inner"><span>CO</span></div></div>
+      <div>
+        <h1 class="title stamp-font">Mon Carnet de Courses</h1>
+        <p>Fruits, légumes &amp; épicerie — tout ce que j'achète, bien rangé.</p>
+      </div>
+    </div>
+    <div class="currency-picker">
+      <label for="currencySelect">Devise</label>
+      <select id="currencySelect"></select>
+    </div>
+  </header>
+
+  <div class="grid" id="columns"></div>
+
+  <section class="register">
+    <div class="register-head">
+      <h2 class="stamp-font">Registre des achats</h2>
+      <span id="itemCount" class="mono">0 article(s)</span>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Désignation</th>
+            <th>Catégorie</th>
+            <th class="num">Prix unitaire</th>
+            <th class="num">Quantité</th>
+            <th class="num">Montant</th>
+            <th>Date d'achat</th>
+            <th>Mois</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+        <tfoot>
+          <tr>
+            <td colspan="4" class="tot-label">Total général</td>
+            <td class="tot-value mono" id="totalGeneral">0,00</td>
+            <td colspan="2"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </section>
+
+  <footer class="app">Tes données et ta devise restent enregistrées sur cet appareil.</footer>
+</div>
+
+<script>
+  const CATEGORIES = [
+    { key:"fruits",   label:"Fruits",   accent:"var(--fruits)",   accentDark:"var(--fruits-dark)",   icon:"🍎", units:["kg"] },
+    { key:"legumes",  label:"Légumes",  accent:"var(--legumes)",  accentDark:"var(--legumes-dark)",  icon:"🥕", units:["kg"] },
+    { key:"epicerie", label:"Épicerie", accent:"var(--epicerie)", accentDark:"var(--epicerie-dark)", icon:"📦", units:["kg","piece"] },
+  ];
+  const UNIT_LABELS = { kg:"kg", piece:"pièce(s)" };
+  const MOIS_FR = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
+
+  // ---- Devises ----
+  const CURRENCIES = [
+    { code:"MGA", label:"Ariary (Ar)",        symbol:"Ar",   position:"after"  },
+    { code:"DZD", label:"Dinar algérien (DA)", symbol:"DA",  position:"after"  },
+    { code:"EUR", label:"Euro (€)",           symbol:"€",    position:"after"  },
+    { code:"USD", label:"Dollar US ($)",      symbol:"$",    position:"before" },
+    { code:"XOF", label:"Franc CFA (FCFA)",   symbol:"FCFA", position:"after"  },
+    { code:"MAD", label:"Dirham marocain (DH)", symbol:"DH", position:"after"  },
+    { code:"GBP", label:"Livre sterling (£)", symbol:"£",    position:"before" },
+    { code:"CHF", label:"Franc suisse (CHF)", symbol:"CHF",  position:"after"  },
+  ];
+  const CURRENCY_KEY = "carnet-de-courses-currency";
+  let currentCurrency = localStorage.getItem(CURRENCY_KEY) || "MGA";
+
+  function currencyInfo(code){
+    return CURRENCIES.find(c=>c.code===code) || CURRENCIES[0];
+  }
+
+  function populateCurrencySelect(){
+    const sel = document.getElementById("currencySelect");
+    sel.innerHTML = CURRENCIES.map(c=>`<option value="${c.code}" ${c.code===currentCurrency?"selected":""}>${c.label}</option>`).join("");
+    sel.addEventListener("change", (e)=>{
+      currentCurrency = e.target.value;
+      localStorage.setItem(CURRENCY_KEY, currentCurrency);
+      render();
+    });
+  }
+
+  const STORAGE_KEY = "carnet-de-courses-items";
+  let items = [];
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    items = saved ? JSON.parse(saved) : defaultItems();
+  } catch(e) { items = defaultItems(); }
+  let nextId = items.reduce((m,it)=>Math.max(m,it.id),0) + 1;
+
+  function defaultItems(){
+    const today = todayISO();
+    return [
+      { id:1, designation:"Bananes", category:"fruits",   prix:2500,  quantite:3, unite:"kg",    date:today },
+      { id:2, designation:"Tomates", category:"legumes",  prix:1800,  quantite:2, unite:"kg",    date:today },
+      { id:3, designation:"Riz 5kg", category:"epicerie", prix:15000, quantite:1, unite:"piece", date:today },
+    ];
+  }
+  function todayISO(){
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+  }
+  function moisLabel(dateStr){
+    if(!dateStr) return "";
+    const [y,m] = dateStr.split("-").map(Number);
+    return `${MOIS_FR[m-1]} ${y}`;
+  }
+  function formatArgent(n){
+    const cur = currencyInfo(currentCurrency);
+    const num = n.toLocaleString("fr-FR", { minimumFractionDigits:2, maximumFractionDigits:2 });
+    return cur.position === "before" ? `${cur.symbol} ${num}` : `${num} ${cur.symbol}`;
+  }
+  function save(){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+  }
+  function catInfo(key){ return CATEGORIES.find(c=>c.key===key); }
+
+  function addItem(item){
+    items.push(item);
+    save();
+    render();
+  }
+  function deleteItem(id){
+    items = items.filter(it=>it.id!==id);
+    save();
+    render();
+  }
+
+  function buildColumn(cat){
+    const col = document.createElement("div");
+    col.className = "col";
+    col.style.border = `3px solid ${cat.accent}`;
+
+    col.innerHTML = `
+      <div class="col-head">
+        <div class="icon-circle" style="background:${cat.accent}">${cat.icon}</div>
+        <h2 class="stamp-font">${cat.label}</h2>
+      </div>
+      <form class="add-form" data-cat="${cat.key}">
+        <input type="text" class="f-designation" placeholder="Nom de l'article" style="border-color:${cat.accent}" required />
+        <div class="row-2">
+          <input type="number" step="0.01" min="0" class="f-prix mono" placeholder="Prix" style="border-color:${cat.accent}" required />
+          <div class="qty-unit-wrap">
+            <input type="number" step="0.001" min="0" class="f-qte mono" placeholder="Qté" value="1" style="border-color:${cat.accent}" required />
+            ${cat.units.length > 1
+              ? `<select class="f-unit mono" style="border-color:${cat.accent}">${cat.units.map(u=>`<option value="${u}">${UNIT_LABELS[u]}</option>`).join("")}</select>`
+              : `<span class="unit-fixed mono" style="border-color:${cat.accent}">${UNIT_LABELS[cat.units[0]]}</span>`
+            }
+          </div>
+        </div>
+        <input type="date" class="f-date mono" style="border-color:${cat.accent}" required />
+        <button type="submit" style="background:${cat.accent}">+ Ajouter</button>
+      </form>
+      <div class="items" id="items-${cat.key}"></div>
+      <div class="col-total" style="border-color:${cat.accent}">
+        <span class="label">Sous-total</span>
+        <span class="value mono" id="total-${cat.key}" style="color:${cat.accentDark}">0,00</span>
+      </div>
+    `;
+
+    const form = col.querySelector("form");
+    form.querySelector(".f-date").value = todayISO();
+    form.addEventListener("submit", (e)=>{
+      e.preventDefault();
+      const designation = form.querySelector(".f-designation").value.trim();
+      const prix = parseFloat(form.querySelector(".f-prix").value);
+      const quantite = parseFloat(form.querySelector(".f-qte").value);
+      const uniteSelect = form.querySelector(".f-unit");
+      const unite = uniteSelect ? uniteSelect.value : cat.units[0];
+      const date = form.querySelector(".f-date").value;
+      if(!designation || isNaN(prix) || isNaN(quantite) || !date) return;
+      addItem({ id: nextId++, designation, category: cat.key, prix, quantite, unite, date });
+      form.reset();
+      form.querySelector(".f-qte").value = "1";
+      form.querySelector(".f-date").value = todayISO();
+    });
+
+    return col;
+  }
+
+  function renderColumns(){
+    const container = document.getElementById("columns");
+    container.innerHTML = "";
+    CATEGORIES.forEach(cat=>container.appendChild(buildColumn(cat)));
+  }
+
+  function renderItemsForCategory(cat){
+    const list = document.getElementById(`items-${cat.key}`);
+    const catItems = items.filter(it=>it.category===cat.key);
+    if(catItems.length===0){
+      list.innerHTML = `<p class="empty-note">Panier vide pour l'instant.</p>`;
+    } else {
+      list.innerHTML = catItems.map(it=>`
+        <div class="item-row">
+          <div>
+            <div class="item-name">${escapeHtml(it.designation)}</div>
+            <div class="item-sub mono">${it.quantite} ${UNIT_LABELS[it.unite] || ""} × ${formatArgent(it.prix)}</div>
+          </div>
+          <div class="item-right">
+            <span class="item-amount mono" style="color:${cat.accentDark}">${formatArgent(it.prix*it.quantite)}</span>
+            <button class="del-btn" data-id="${it.id}" aria-label="Supprimer">🗑</button>
+          </div>
+        </div>
+      `).join("");
+      list.querySelectorAll(".del-btn").forEach(btn=>{
+        btn.addEventListener("click", ()=>deleteItem(parseInt(btn.dataset.id,10)));
+      });
+    }
+    const total = catItems.reduce((s,it)=>s+it.prix*it.quantite,0);
+    document.getElementById(`total-${cat.key}`).textContent = formatArgent(total);
+  }
+
+  function renderTable(){
+    const tbody = document.getElementById("tableBody");
+    const sorted = [...items].sort((a,b)=> a.date < b.date ? 1 : -1);
+    if(sorted.length===0){
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; font-style:italic; color:var(--ink-faint); padding:24px;">Aucun achat enregistré pour le moment.</td></tr>`;
+    } else {
+      tbody.innerHTML = sorted.map(it=>{
+        const cat = catInfo(it.category);
+        return `
+          <tr>
+            <td style="font-weight:600;">${escapeHtml(it.designation)}</td>
+            <td><span class="badge" style="background:${cat.accent}">${cat.label}</span></td>
+            <td class="num mono">${formatArgent(it.prix)}</td>
+            <td class="num mono">${it.quantite} ${UNIT_LABELS[it.unite] || ""}</td>
+            <td class="num mono" style="font-weight:700;">${formatArgent(it.prix*it.quantite)}</td>
+            <td class="mono" style="color:var(--ink-soft);">${it.date}</td>
+            <td style="color:var(--ink-soft);">${moisLabel(it.date)}</td>
+          </tr>
+        `;
+      }).join("");
+    }
+    document.getElementById("itemCount").textContent = `${items.length} article(s)`;
+    const totalGeneral = items.reduce((s,it)=>s+it.prix*it.quantite,0);
+    document.getElementById("totalGeneral").textContent = formatArgent(totalGeneral);
+  }
+
+  function escapeHtml(str){
+    const div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function render(){
+    CATEGORIES.forEach(renderItemsForCategory);
+    renderTable();
+  }
+
+  populateCurrencySelect();
+  renderColumns();
+  render();
+
+  // ---- PWA: enregistrement du service worker ----
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("sw.js").catch(()=>{});
+    });
+  }
+
+  // ---- PWA: bannière d'installation Android ----
+  let deferredPrompt = null;
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    document.getElementById("installBanner").style.display = "flex";
+  });
+  document.getElementById("installBtn").addEventListener("click", async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    document.getElementById("installBanner").style.display = "none";
+  });
+  window.addEventListener("appinstalled", () => {
+    document.getElementById("installBanner").style.display = "none";
+  });
+</script>
+</body>
+</html>
